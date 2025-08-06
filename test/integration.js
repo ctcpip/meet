@@ -3,14 +3,14 @@ require('dotenv').config()
 const { suite, test, before } = require('mocha')
 const assert = require('assert')
 const { DateTime } = require('luxon')
-const github = require('@actions/github')
+const { getOctokit } = require('@actions/github')
 const pkg = require('../package.json')
 const meetings = require('../lib/meetings')
 
 suite(`${pkg.name} integration`, () => {
   let client
   before(() => {
-    client = new github.GitHub(process.env.GITHUB_TOKEN)
+    client = getOctokit(process.env.GITHUB_TOKEN)
   })
   test('should create next meeting issue', async () => {
     const issue = await meetings.shouldCreateNextMeetingIssue(client, {
@@ -51,7 +51,7 @@ suite(`${pkg.name} integration`, () => {
     assert.deepStrictEqual(issue.data.title, `Test Meeting ${DateTime.fromISO('2020-04-16T13:00:00.0Z').toFormat('yyyy-MM-dd')}`)
     assert.deepStrictEqual(issue.data.state, 'open')
 
-    client.issues.update({
+    await client.rest.issues.update({
       owner: 'wesleytodd',
       repo: 'meeting-maker',
       issue_number: issue.data.number,
